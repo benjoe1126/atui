@@ -2,34 +2,19 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"path/filepath"
 
 	"github.com/benjoe1126/atui/pkg/argo"
+	"github.com/benjoe1126/atui/pkg/kube"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 )
 
 func main() {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	}
-	flag.Parse()
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
-
 	// create the clientset
-	clientset, err := dynamic.NewForConfig(config)
+	clientset, err := dynamic.NewForConfig(kube.Kubeconfig)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -42,5 +27,12 @@ func main() {
 	if err := runtime.DefaultUnstructuredConverter.FromUnstructuredWithValidation(list.Items[0].UnstructuredContent(), &cl, false); err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(cl.Spec.Source)
+	var appset argo.ApplicationSet
+	res = schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "applicationsets"}
+	list, err = clientset.Resource(res).Namespace("kszk-argocd").List(context.Background(), metav1.ListOptions{Limit: 4})
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructuredWithValidation(list.Items[0].UnstructuredContent(), &appset, false); err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(appset.GetCreatedApplications())
+	fmt.Println(cl.OwnerReferences[0].Name)
 }

@@ -1,6 +1,13 @@
 package argo
 
-import v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	"context"
+
+	"github.com/benjoe1126/atui/pkg/kube"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+)
 
 type ApplicationSet struct {
 	v1.TypeMeta   `json:",inline"`
@@ -80,22 +87,44 @@ type ApplicationSetStatus struct {
 	Conditions []Condition `json:"conditions,omitempty"`
 }
 
-func (a ApplicationSet) Name() string {
+func (a *ApplicationSet) Name() string {
+	return a.GetName()
+}
+
+func (a *ApplicationSet) View() string {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a ApplicationSet) View() string {
+func (a *ApplicationSet) Edit() error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a ApplicationSet) Edit() error {
+func (a *ApplicationSet) Delete() error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a ApplicationSet) Delete() error {
-	//TODO implement me
-	panic("implement me")
+func (a *ApplicationSet) GetCreatedApplications() ([]Application, error) {
+	resKind := schema.GroupVersionResource{Group: "argoproj.io", Version: "v1alpha1", Resource: "applications"}
+	client, err := kube.NewClient()
+	if err != nil {
+		return nil, err
+	}
+	apps, err := client.Resource(resKind).List(context.Background(), v1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	ret := make([]Application, 0)
+	for _, app := range apps.Items {
+		if len(app.GetOwnerReferences()) > 0 && app.GetOwnerReferences()[0].Name == a.Name() {
+			var appManifest Application
+			if err := runtime.DefaultUnstructuredConverter.FromUnstructuredWithValidation(app.UnstructuredContent(), &appManifest, false); err != nil {
+				return nil, err
+			}
+			ret = append(ret, appManifest)
+		}
+	}
+	return ret, nil
 }
