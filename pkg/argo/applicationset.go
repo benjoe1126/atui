@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/benjoe1126/atui/pkg/kube"
+	"github.com/benjoe1126/atui/pkg/view"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -14,6 +15,21 @@ type ApplicationSet struct {
 	v1.ObjectMeta `json:"metadata,omitempty"`
 	Spec          ApplicationSetSpec   `json:"spec,omitempty"`
 	Status        ApplicationSetStatus `json:"status,omitempty"`
+}
+
+func (a *ApplicationSet) Id() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *ApplicationSet) View() view.View {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *ApplicationSet) SubComponents() []Component {
+	//TODO implement me
+	panic("implement me")
 }
 
 type ApplicationSetSpec struct {
@@ -89,11 +105,6 @@ type ApplicationSetStatus struct {
 
 func (a *ApplicationSet) Name() string {
 	return a.GetName()
-}
-
-func (a *ApplicationSet) View() string {
-	//TODO implement me
-	panic("implement me")
 }
 
 func (a *ApplicationSet) Edit() error {

@@ -9,4 +9,5 @@ type View interface {
 	TableRowView() table.Row
 	EditView() textarea.Model
 	ArgoView() string
+	TableColumns() []table.Column
 }
